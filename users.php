@@ -65,9 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'login') {
 		$userName = $row['name'];
 		$email = $row['email'];
 		$coins = $row['coins'];
-		$profile_picture = $row['photo'] != '' ? $row['photo'] : 'assets/img/faces/blacklogo.png';
 		$theme = $row['theme'];
 		$type = $row['type'];
+
+		$profile_picture = $row['photo'] != '' ? $row['photo'] : 'assets/img/faces/blacklogo.png';
+		// replace uploads with assets
+		$profile_picture = 'assets/' . str_replace('uploads/', '', $profile_picture);
 
 		sendResponse(200, [
 			'user_id' => $user_id,
