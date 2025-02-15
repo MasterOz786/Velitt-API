@@ -102,6 +102,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'redeem') {
 	}
 }
 
+// ----------------------------------------------------------------
+// New Endpoint: Handle GET request to fetch redemptions history
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $endpoint === 'redemptions') {
+	// Get member_id from query parameters
+	if (!isset($_GET['member_id'])) {
+		sendResponse(400, ['error' => 'member_id is required']);
+	}
+
+	$member_id = intval($_GET['member_id']);
+
+	// Query to fetch redemptions history by joining coupon_requests and coupons tables.
+	$query = "
+        SELECT 
+            m.name AS name,
+            c.name AS coupon,
+            DATE(cr.created_at) AS date,
+            TIME(cr.created_at) AS time,
+            cr.status AS status
+        FROM 
+            coupon_requests cr
+        INNER JOIN 
+            coupons c ON cr.coupon_id = c.id
+        INNER JOIN
+		    member m on cr.member_id = m.id
+        WHERE 
+            cr.member_id = '$member_id'
+        ORDER BY 
+            cr.created_at DESC;
+    ";
+	$result = mysqli_query($db, $query);
+
+	if ($result && mysqli_num_rows($result) > 0) {
+		$redemptions = [];
+		while ($row = mysqli_fetch_assoc($result)) {
+			$redemptions[] = $row;
+		}
+		sendResponse(200, ['redemptions' => $redemptions]);
+	} else {
+		sendResponse(404, ['error' => 'No redemptions found']);
+	}
+}
+
 // If no valid endpoint is matched
 sendResponse(404, ['error' => 'Invalid endpoint: ' . $endpoint]);
 ?>
