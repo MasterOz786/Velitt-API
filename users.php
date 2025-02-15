@@ -48,10 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'login') {
 	$password = mysqli_real_escape_string($db, $input['password']);
 
 	$query = "
-        SELECT u.id, u.name, u.email, u.status, u.type, u.theme, mp.photo
+        SELECT m.id, u.name, u.email, u.status, u.type, u.theme, mp.photo, m.coins
         FROM `user` u
+		LEFT JOIN `member` m
+		ON u.email = m.email
         LEFT JOIN `memberphoto` mp
-        ON u.id = mp.m_id
+        ON m.id = mp.m_id
         WHERE u.password='$password' AND u.email='$email' AND u.status='1';
     ";
 
@@ -62,22 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'login') {
 		$user_id = $row['id'];
 		$userName = $row['name'];
 		$email = $row['email'];
+		$coins = $row['coins'];
 		$profile_picture = $row['photo'] != '' ? $row['photo'] : 'assets/img/faces/blacklogo.png';
 		$theme = $row['theme'];
 		$type = $row['type'];
-
-		$_SESSION['user_id'] = $user_id;
-		$_SESSION['username'] = $userName;
-		$_SESSION['profile_picture'] = $profile_picture;
-		$_SESSION['email'] = $email;
-		$_SESSION['theme'] = $theme;
-		$_SESSION['type'] = $type;
-		$_SESSION['message'] = "You are now logged in";
 
 		sendResponse(200, [
 			'user_id' => $user_id,
 			'username' => $userName,
 			'email' => $email,
+			'coins' => $coins,
 			'profile_picture' => $profile_picture,
 			'theme' => $theme,
 			'type' => $type,

@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $endpoint === 'history') {
         LEFT JOIN 
             events e ON w.event_id = e.evt_id
         WHERE 
-            w.user_id = '$member_id'
+            w.member_id = '$member_id'
         ORDER BY 
             w.created_at DESC;
     ";
