@@ -52,6 +52,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && preg_match('/^([0-9]+)$/', $endpoint
 	}
 }
 
+// Handle POST request to redeem coins
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'redeem') {
+	// Get input data from the request body
+	$input = json_decode(file_get_contents('php://input'), true);
+
+	// Validate required parameters
+	if (!isset($input['member_id']) || !isset($input['coupon_id'])) {
+		sendResponse(400, ['error' => 'member_id and coupon_id are required']);
+	}
+
+	$member_id = intval($input['member_id']);
+	$coupon_id = intval($input['coupon_id']);
+
+	// Insert redemption request into the database
+	$query = "INSERT INTO coupon_requests (member_id, coupon_id, status) 
+      	        VALUES ('$member_id', '$coupon_id', 'pending')";
+	$result = mysqli_query($db, $query);
+
+	if (!$result) {
+		sendResponse(500, ['error' => 'Failed to submit redemption request']);
+	} else {
+		sendResponse(200, ['message' => 'Redemption request submitted successfully']);
+	}
+}
+
 // Handle POST request to update coupon status
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'update-status') {
 	$input = json_decode(file_get_contents('php://input'), true);

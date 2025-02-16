@@ -77,33 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $endpoint === 'history') {
 	}
 }
 
-// Handle POST request to redeem coins
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'redeem') {
-	// Get input data from the request body
-	$input = json_decode(file_get_contents('php://input'), true);
-
-	// Validate required parameters
-	if (!isset($input['member_id']) || !isset($input['coupon_id'])) {
-		sendResponse(400, ['error' => 'member_id and coupon_id are required']);
-	}
-
-	$member_id = intval($input['member_id']);
-	$coupon_id = intval($input['coupon_id']);
-
-	// Insert redemption request into the database
-	$query = "INSERT INTO coupon_requests (member_id, coupon_id, status) 
-              VALUES ('$member_id', '$coupon_id', 'pending')";
-	$result = mysqli_query($db, $query);
-
-	if (!$result) {
-		sendResponse(500, ['error' => 'Failed to submit redemption request']);
-	} else {
-		sendResponse(200, ['message' => 'Redemption request submitted successfully']);
-	}
-}
-
-// ----------------------------------------------------------------
-// New Endpoint: Handle GET request to fetch redemptions history
+// Handle GET request to fetch redemptions history
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && $endpoint === 'redemptions') {
 	// Get member_id from query parameters
 	if (!isset($_GET['member_id'])) {
@@ -120,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $endpoint === 'redemptions') {
             DATE(cr.created_at) AS date,
             TIME(cr.created_at) AS time,
             cr.status AS status
-        FROM 
+        FROM
             coupon_requests cr
         INNER JOIN 
             coupons c ON cr.coupon_id = c.id
@@ -142,6 +116,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $endpoint === 'redemptions') {
 	} else {
 		sendResponse(404, ['error' => 'No redemptions found']);
 	}
+}
+
+// PUT request to update member balance
+if ($_SERVER['REQUEST_METHOD'] === 'PUT' && preg_match('/^balance\/([0-9]+)$/', $endpoint, $matches)) {
+    $memberId = intval($matches[1]);
+    // validateMemberAccess($db, $memberId);
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!isset($input['coins'])) {
+        sendResponse(400, ['error' => 'Coins amount is required']);
+    }
+    
+    $query = "UPDATE member SET coins = ? WHERE id = ?";
+    $stmt = mysqli_prepare($db, $query);
+    // Assuming balance is a decimal value and member id is an integer.
+    mysqli_stmt_bind_param($stmt, 'di', $input['coins'], $memberId);
+    
+    if (mysqli_stmt_execute($stmt)) {
+        sendResponse(200, ['message' => 'Coins updated successfully']);
+    } else {
+        sendResponse(500, ['error' => 'Failed to update coins']);
+    }
 }
 
 // If no valid endpoint is matched
