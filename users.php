@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'login') {
 	$password = mysqli_real_escape_string($db, $input['password']);
 
 	$query = "
-        SELECT m.id, u.name, u.email, u.status, u.type, u.theme, mp.photo, m.coins
+        SELECT m.id, m.email, m.name, m.Tussenvoegsel, m.lastName, m.coins, m.telephone, m.mobile, m.dateOfBirth, m.agreementStartDate, m.agreementEndDate, u.status, u.type, u.theme, mp.photo
         FROM `user` u
 		LEFT JOIN `member` m
 		ON u.email = m.email
@@ -62,25 +62,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $endpoint === 'login') {
 	if (mysqli_num_rows($results) == 1) {
 		$row = mysqli_fetch_assoc($results);
 		$user_id = $row['id'];
-		$userName = $row['name'];
 		$email = $row['email'];
-		$coins = $row['coins'];
-		$theme = $row['theme'];
+		$firstName = $row['name'];
+		$Tussenvoegsel = $row['Tussenvoegsel'];
+		$lastName = $row['lastName'];
+		$coins = $row['coins'] ?? 0;
+		$telephone = $row['telephone'];
+		$mobile = $row['mobile'];
+		$dateOfBirth = $row['dateOfBirth'];
+		$status = $row['status'];
 		$type = $row['type'];
+		$theme = $row['theme'];
+		$photo = $row['photo'];
+		$agreementStartDate = $row['agreementStartDate'];
+		$agreementEndDate = $row['agreementEndDate'];
 
 		$profile_picture = $row['photo'] != '' ? $row['photo'] : 'assets/img/faces/blacklogo.png';
 		// replace uploads with assets
 		$profile_picture = 'assets/' . str_replace('uploads/', '', $profile_picture);
 
 		sendResponse(200, [
-			'user_id' => $user_id,
-			'username' => $userName,
+			'id' => $user_id,
 			'email' => $email,
-			'coins' => $coins,
-			'profile_picture' => $profile_picture,
-			'theme' => $theme,
+			'firstName' => $firstName,
+			'lastName' => $lastName,
+			'Tussenvoegsel' => $Tussenvoegsel,
+			'coins' => $coins ?? 0,
+			'telephone' => $telephone,
+			'mobile' => $mobile,
+			'dateOfBirth' => $dateOfBirth,
+			'status' => $status,
 			'type' => $type,
-			'message' => 'Login successful'
+			'theme' => $theme,
+			'photo' => $profile_picture,
+			'agreementStartDate' => $agreementStartDate,
+			'agreementEndDate' => $agreementEndDate,
+			'message' => 'Login successful',
 		]);
 	} else {
 		sendResponse(401, ['error' => 'Wrong username/password combination']);
